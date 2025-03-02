@@ -1,1 +1,1 @@
-exploring strategy in git
+firs push
