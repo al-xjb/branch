@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "frontend-image"
+        REGISTRY = ""
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    sh """
+                    docker build -t $REGISTRY/$IMAGE_NAME:${env.BRANCH_NAME} .
+                    docker push $REGISTRY/$IMAGE_NAME:${env.BRANCH_NAME}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Cluster') {
+            steps {
+                script {
+                    // Pull the latest image and deploy to the cluster
+                    sh """
+                    docker pull $REGISTRY/$IMAGE_NAME:${env.BRANCH_NAME}
+                    kubectl set image deployment/frontend frontend=$REGISTRY/$IMAGE_NAME:${env.BRANCH_NAME}
+                    """
+                }
+            }
+        }
+    }
+}
