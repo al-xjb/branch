@@ -1,24 +1,24 @@
-name: Test Self-Hosted Runner
+name: Test Connectivity
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  test_runner:
-    runs-on: ubuntu-latest #  This is a placeholder, your runner likely uses a different label.
+  connectivity-test:
+    runs-on: ubuntu-latest
     steps:
-      - name: Check Runner Availability
-        run: echo "Hello from the self-hosted runner!"
-      - name: Get Environment Variables
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check internet connectivity with curl
         run: |
-          echo "GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
-          echo "USER: ${{ env.USER }}"
-      - name: Test Network Connectivity
-        run: |
-          ping -c 3 google.com  # Or any public website
-          if [ $? -eq 0 ]; then
-            echo "Network connectivity OK"
+          echo "Testing internet connectivity..."
+          if curl -s --head https://google.com | grep "200 OK" > /dev/null; then
+            echo "Internet connection is working."
           else
-            echo "Network connectivity FAILED"
+            echo "Internet connection failed."
             exit 1
           fi
