@@ -8,17 +8,19 @@ on:
 
 jobs:
   connectivity-test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Use your self-hosted runner's label
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4  # Update to latest version
 
       - name: Check internet connectivity with curl
         run: |
           echo "Testing internet connectivity..."
-          if curl -s --head https://google.com | grep "200 OK" > /dev/null; then
+          curl -s -I https://google.com || { echo "Curl command failed"; exit 1; }
+          if curl -s -I https://google.com | grep -E "200 OK|301 Moved Permanently" > /dev/null; then
             echo "Internet connection is working."
           else
-            echo "Internet connection failed."
+            echo "Internet connection failed. HTTP response not 200 or 301."
+            curl -s -I https://google.com  # Output full headers for debugging
             exit 1
           fi
